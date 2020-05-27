@@ -2,6 +2,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from calendar import USTradingCalendar
 
+import numpy as np
 
 def _get_nearest_trading_day(date, businessDayConvention):
     return date
@@ -25,7 +26,7 @@ def _get_coupon_dates(valuationDate, maturityDate, couponsPerYear, businessDayCo
 
 
 def _get_discount_factor(yld, t, coupon):
-    return 1 / ((1 + yld) ** (t * coupon))
+    return (1 + yld) ** (-t * coupon)
 
 
 def price_bond(yld,
@@ -36,7 +37,8 @@ def price_bond(yld,
                include_accrued_interest=True,
                business_day_convention='Modified Following',
                calendar=None):
-    """Get the price for a bond at a given valuation date
+    """
+    Get the price for a bond at a given valuation date
     """
     calendar = calendar if calendar is not None else USTradingCalendar()
     price = 0
@@ -62,3 +64,26 @@ def price_bond(yld,
     return price
 
 # def modifiedDuration():
+
+
+def pv(cashflows, r):
+    """
+    Compute the present value of a sequence of cash flows
+    """
+    dates = cashflows.index
+    discount_factors = discount_factor(dates, r)
+    return (discount_factors * cashflows).sum()
+
+
+def get_annual_rate(r_inst):
+    """
+    Converts the short rate to an annualized rate
+    """
+    return np.expm1(r_inst)
+
+
+def get_short_rate(r_ann):
+    """
+    Converts annualized rate to a short rate
+    """
+    return np.log1p(r_ann)
